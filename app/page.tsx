@@ -24,7 +24,6 @@ type StreamingInfo = {
 type StreamingMap = {
   [key: number]: StreamingInfo;
 };
-const [overviewExpanded, setOverviewExpanded] = useState(false);
 const COUNTRIES = [
   { code: "US", name: "United States" },
   { code: "GB", name: "United Kingdom" },
@@ -60,6 +59,8 @@ function ProviderList({ info }: { info: StreamingInfo }) {
 
 
 function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: StreamingInfo; index: number }) {
+const [overviewExpanded, setOverviewExpanded] = useState(false);
+
   const [visible, setVisible] = useState(false);
   const [tldrState, setTldrState] = useState<"idle" | "confirm" | "loading" | "shown">("idle");
   const [tldrText, setTldrText] = useState("");
