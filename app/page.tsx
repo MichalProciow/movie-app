@@ -24,7 +24,7 @@ type StreamingInfo = {
 type StreamingMap = {
   [key: number]: StreamingInfo;
 };
-
+const [overviewExpanded, setOverviewExpanded] = useState(false);
 const COUNTRIES = [
   { code: "US", name: "United States" },
   { code: "GB", name: "United Kingdom" },
@@ -171,18 +171,33 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
         </div>
 
        {/* Overview — always visible */}
+       <div>
+       
         <p style={{
-          fontFamily: "'Courier New', monospace",
-          fontSize: "9px",
-          color: "#4a6a3a",
-          lineHeight: 1.4,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}>
-          {movie.overview}
-        </p>
+    fontFamily: "'Courier New', monospace", fontSize: "8px", color: "#3a5a3a",
+    lineHeight: 1.5, margin: "0 0 2px 0",
+    display: overviewExpanded ? "block" : "-webkit-box",
+    WebkitLineClamp: overviewExpanded ? undefined : 2,
+    WebkitBoxOrient: "vertical",
+    overflow: overviewExpanded ? "visible" : "hidden",
+  }}>
+    {movie.overview}
+  </p>
+  {movie.overview && movie.overview.length > 80 && (
+    <button
+      onClick={() => setOverviewExpanded(e => !e)}
+      style={{
+        background: "transparent", border: "none",
+        color: "#2a5a2a", fontFamily: "VT323, monospace",
+        fontSize: "10px", letterSpacing: "1px",
+        padding: "0", cursor: "pointer",
+      }}
+    >
+      {overviewExpanded ? "▲ LESS" : "▼ MORE"}
+    </button>
+  )}
+</div>
+
 
         {/* Divider */}
         {tldrState === "shown" && (
@@ -608,7 +623,7 @@ export default function Home() {
                 {/* Header */}
                 <div style={{ textAlign: "center", marginBottom: "24px" }}>
                   <div className="phosphor-dim" style={{ fontSize: "12px", letterSpacing: "6px", marginBottom: "4px" }}>
-                    ◄ DOUBLE FEATURE VIDEO ►
+                  
                   </div>
                   <div className="phosphor-text" style={{ fontSize: "clamp(32px, 5vw, 52px)", letterSpacing: "4px", lineHeight: 1 }}>
                     DOUBLE FEATURE
