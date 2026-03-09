@@ -57,8 +57,13 @@ function ProviderList({ info }: { info: StreamingInfo }) {
   );
 }
 
+
+
 function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: StreamingInfo; index: number }) {
   const [visible, setVisible] = useState(false);
+  const [tldrState, setTldrState] = useState<"idle" | "confirm" | "loading" | "shown">("idle");
+  const [tldrText, setTldrText] = useState("");
+
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "N/A";
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
 
@@ -66,6 +71,23 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
     const t = setTimeout(() => setVisible(true), index * 180);
     return () => clearTimeout(t);
   }, [index]);
+
+  async function handleTldrConfirm() {
+    setTldrState("loading");
+    try {
+      const res = await fetch("/api/tldr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: movie.title, year }),
+      });
+      const data = await res.json();
+      setTldrText(data.summary || "Could not load summary.");
+      setTldrState("shown");
+    } catch {
+      setTldrText("Error fetching summary.");
+      setTldrState("shown");
+    }
+  }
 
   return (
     <div style={{
@@ -76,11 +98,8 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
       flexDirection: "column",
       cursor: "default",
     }}>
-      {/* The poster being slid across the counter */}
-      <div style={{
-        position: "relative",
-        marginBottom: "0",
-      }}>
+      {/* Poster */}
+      <div style={{ position: "relative", marginBottom: "0" }}>
         {movie.poster_path ? (
           <img
             src={"https://image.tmdb.org/t/p/w342" + movie.poster_path}
@@ -105,7 +124,7 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
           </div>
         )}
 
-        {/* Green phosphor rating badge */}
+        {/* Rating badge */}
         <div style={{
           position: "absolute", top: "6px", right: "6px",
           background: "rgba(0,0,0,0.85)",
@@ -121,13 +140,16 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
         </div>
       </div>
 
-      {/* Label strip — like a VHS sticker */}
+      {/* Label strip */}
       <div style={{
         background: "#0e1a0e",
         border: "1px solid #2a4a2a",
         borderTop: "2px solid #3a6a2a",
         padding: "8px 10px",
         borderRadius: "0 0 2px 2px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
       }}>
         <div style={{
           fontFamily: "VT323, monospace",
@@ -135,7 +157,6 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
           color: "#8aca6a",
           letterSpacing: "1px",
           lineHeight: 1.2,
-          marginBottom: "3px",
           textTransform: "uppercase",
         }}>
           {movie.title}
@@ -144,24 +165,144 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
           fontFamily: "VT323, monospace",
           fontSize: "12px",
           color: "#4a7a3a",
-          marginBottom: "5px",
           letterSpacing: "1px",
         }}>
           {year}
         </div>
-        <p style={{
-          fontFamily: "'Courier New', monospace",
-          fontSize: "9px",
-          color: "#4a6a3a",
-          lineHeight: 1.4,
-          marginBottom: "6px",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}>
-          {movie.overview}
-        </p>
+
+        {/* Overview — hidden when TLDR is shown */}
+        {tldrState !== "shown" && (
+          <p style={{
+            fontFamily: "'Courier New', monospace",
+            fontSize: "9px",
+            color: "#4a6a3a",
+            lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}>
+            {movie.overview}
+          </p>
+        )}
+
+        {/* TLDR section */}
+        {tldrState === "idle" && (
+          <button
+            onClick={() => setTldrState("confirm")}
+            style={{
+              marginTop: "2px",
+              background: "transparent",
+              border: "1px solid #2a5a2a",
+              color: "#4a8a3a",
+              fontFamily: "VT323, monospace",
+              fontSize: "11px",
+              letterSpacing: "2px",
+              padding: "2px 6px",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => {
+              (e.target as HTMLButtonElement).style.color = "#7acc5a";
+              (e.target as HTMLButtonElement).style.borderColor = "#4a8a3a";
+            }}
+            onMouseLeave={e => {
+              (e.target as HTMLButtonElement).style.color = "#4a8a3a";
+              (e.target as HTMLButtonElement).style.borderColor = "#2a5a2a";
+            }}
+          >
+            TLDR ▶
+          </button>
+        )}
+
+        {tldrState === "confirm" && (
+          <div style={{ marginTop: "2px" }}>
+            <div style={{
+              fontFamily: "VT323, monospace",
+              fontSize: "11px",
+              color: "#7acc5a",
+              letterSpacing: "1px",
+              marginBottom: "4px",
+            }}>
+              ⚠ CONTAINS SPOILERS
+            </div>
+            <div style={{ display: "flex", gap: "4px" }}>
+              <button
+                onClick={handleTldrConfirm}
+                style={{
+                  background: "rgba(74,170,42,0.15)",
+                  border: "1px solid #4a8a3a",
+                  color: "#7acc5a",
+                  fontFamily: "VT323, monospace",
+                  fontSize: "11px",
+                  letterSpacing: "1px",
+                  padding: "2px 8px",
+                  cursor: "pointer",
+                }}
+              >
+                SHOW
+              </button>
+              <button
+                onClick={() => setTldrState("idle")}
+                style={{
+                  background: "transparent",
+                  border: "1px solid #2a4a2a",
+                  color: "#4a6a3a",
+                  fontFamily: "VT323, monospace",
+                  fontSize: "11px",
+                  letterSpacing: "1px",
+                  padding: "2px 8px",
+                  cursor: "pointer",
+                }}
+              >
+                CANCEL
+              </button>
+            </div>
+          </div>
+        )}
+
+        {tldrState === "loading" && (
+          <div style={{
+            fontFamily: "VT323, monospace",
+            fontSize: "11px",
+            color: "#4a8a3a",
+            letterSpacing: "2px",
+            marginTop: "2px",
+          }}>
+            READING THE BACK...
+          </div>
+        )}
+
+        {tldrState === "shown" && (
+          <div style={{ marginTop: "2px" }}>
+            <p style={{
+              fontFamily: "'Courier New', monospace",
+              fontSize: "9px",
+              color: "#7acc5a",
+              lineHeight: 1.5,
+              marginBottom: "4px",
+            }}>
+              {tldrText}
+            </p>
+            <button
+              onClick={() => { setTldrState("idle"); setTldrText(""); }}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#2a5a2a",
+                fontFamily: "VT323, monospace",
+                fontSize: "10px",
+                letterSpacing: "1px",
+                padding: "0",
+                cursor: "pointer",
+              }}
+            >
+              ✕ HIDE
+            </button>
+          </div>
+        )}
+
         <ProviderList info={streaming} />
       </div>
     </div>
