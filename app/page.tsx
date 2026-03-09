@@ -170,20 +170,23 @@ function MovieSlide({ movie, streaming, index }: { movie: Movie; streaming: Stre
           {year}
         </div>
 
-        {/* Overview — hidden when TLDR is shown */}
-        {tldrState !== "shown" && (
-          <p style={{
-            fontFamily: "'Courier New', monospace",
-            fontSize: "9px",
-            color: "#4a6a3a",
-            lineHeight: 1.4,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}>
-            {movie.overview}
-          </p>
+       {/* Overview — always visible */}
+        <p style={{
+          fontFamily: "'Courier New', monospace",
+          fontSize: "9px",
+          color: "#4a6a3a",
+          lineHeight: 1.4,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
+          {movie.overview}
+        </p>
+
+        {/* Divider */}
+        {tldrState === "shown" && (
+          <div style={{ borderTop: "1px solid #1a3a1a", marginTop: "2px" }} />
         )}
 
         {/* TLDR section */}
